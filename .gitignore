@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+*.pyd
+
+*.h5
+*.keras
+*.pt
+*.pth
+
+models/

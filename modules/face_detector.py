@@ -15,22 +15,15 @@ class FaceDetector:
             min_tracking_confidence=0.5
         )
 
+    # ---------------- CORE LANDMARK EXTRACTION ----------------
     def get_landmarks(self, frame):
-        """
-        Returns:
-            landmarks_px : numpy array (468,2)
-            results      : mediapipe result object
-        """
-
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
         results = self.face_mesh.process(rgb)
 
         if not results.multi_face_landmarks:
             return None, results
 
         face_landmarks = results.multi_face_landmarks[0]
-
         h, w = frame.shape[:2]
 
         landmarks_px = []
@@ -38,13 +31,33 @@ class FaceDetector:
         for lm in face_landmarks.landmark:
             x = int(lm.x * w)
             y = int(lm.y * h)
-
             landmarks_px.append([x, y])
 
-        landmarks_px = np.array(landmarks_px)
+        return np.array(landmarks_px), results
 
-        return landmarks_px, results
+    # ---------------- COMPATIBILITY WRAPPER (IMPORTANT) ----------------
+    def detect(self, frame):
+        landmarks, results = self.get_landmarks(frame)
 
+        faces = []
+
+        if landmarks is None:
+            return faces
+
+        # bounding box
+        x_min = np.min(landmarks[:, 0])
+        x_max = np.max(landmarks[:, 0])
+        y_min = np.min(landmarks[:, 1])
+        y_max = np.max(landmarks[:, 1])
+
+        faces.append({
+            "bbox": (x_min, y_min, x_max - x_min, y_max - y_min),
+            "landmarks": landmarks
+        })
+
+        return faces
+
+    # ---------------- DRAW ----------------
     def draw_landmarks(self, frame, results):
 
         if not results.multi_face_landmarks:
@@ -58,8 +71,7 @@ class FaceDetector:
                 self.mp_face_mesh.FACEMESH_TESSELATION,
                 landmark_drawing_spec=None,
                 connection_drawing_spec=
-                mp.solutions.drawing_styles
-                .get_default_face_mesh_tesselation_style()
+                mp.solutions.drawing_styles.get_default_face_mesh_tesselation_style()
             )
 
         return frame

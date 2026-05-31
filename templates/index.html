@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Engagement Detection Dashboard</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #080b16;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #11162d 0%, #05070e 100%);
+            --card-bg: rgba(17, 22, 43, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+
+            /* High Fidelity HSL Colors */
+            --color-active: 145;
+            /* Emerald Green */
+            --color-moderate: 45;
+            /* Golden Yellow */
+            --color-low: 25;
+            /* Orange */
+            --color-warning: 355;
+            /* Neon Pink/Red */
+
+            --theme-green: hsl(var(--color-active), 85%, 50%);
+            --theme-yellow: hsl(var(--color-moderate), 90%, 50%);
+            --theme-orange: hsl(var(--color-low), 95%, 55%);
+            --theme-red: hsl(var(--color-warning), 85%, 55%);
+
+            --active-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            background-image: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Glowing background orbs for immersive depth */
+        body::before,
+        body::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(140px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        body::before {
+            background: var(--theme-green);
+            top: 10%;
+            left: 10%;
+        }
+
+        body::after {
+            background: hsl(200, 85%, 50%);
+            bottom: 15%;
+            right: 10%;
+        }
+
+        /* Navigation Header */
+        header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(8, 11, 22, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--theme-green), #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-family: var(--font-display);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--theme-green);
+            box-shadow: 0 0 8px var(--theme-green);
+            animation: pulse 2s infinite;
+        }
+
+        /* Controls button */
+        .btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: var(--font-body);
+        }
+
+        .btn:hover {
+            background: var(--text-primary);
+            color: #080b16;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--theme-red);
+            color: #ffffff;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 40px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            flex-grow: 1;
+        }
+
+        /* Metrics Top Bar Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* Glassmorphic Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(225deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+            pointer-events: none;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Metrics Card Customizations */
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .metric-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Dynamic Indicator Glow States */
+        .card-state-glow {
+            transition: box-shadow 0.5s ease, border-color 0.5s ease;
+        }
+
+        .glow-green {
+            box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .glow-yellow {
+            box-shadow: 0 8px 32px 0 rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        .glow-orange {
+            box-shadow: 0 8px 32px 0 rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.25);
+        }
+
+        .glow-red {
+            box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Warnings & Alerts display */
+        .alert-panel {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .alert-pill {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .alert-pill.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--theme-red);
+            border-color: rgba(239, 68, 68, 0.4);
+            animation: pulse-border 1.5s infinite;
+        }
+
+        /* SVG Circular Progress Gauge */
+        .gauge-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gauge-svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 8;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: var(--theme-green);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 226;
+            stroke-dashoffset: 226;
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+        }
+
+        .gauge-text {
+            position: absolute;
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .card-gauge-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Dashboard Main Layout Split */
+        .dashboard-body {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Video Card Stream */
+        .video-card {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .video-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-container {
+            width: 100%;
+            background: #04060b;
+            aspect-ratio: 4/3;
+            max-height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .video-stream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .stream-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .video-offline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+
+        .video-offline-icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        /* Right Panel Details (Telemetry progress bars & stats) */
+        .details-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .sub-metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sub-metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sub-metric-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .sub-metric-name {
+            color: var(--text-secondary);
+        }
+
+        .sub-metric-val {
+            font-family: var(--font-display);
+            color: var(--text-primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+        }
+
+        /* Chart card */
+        .chart-card {
+            padding: 24px;
+            width: 100%;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                box-shadow: 0 0 12px var(--theme-green);
+            }
+
+            100% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+
+            50% {
+                border-color: rgba(239, 68, 68, 0.7);
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+            }
+
+            100% {
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+        }
+
+        /* Compass Widget */
+        .head-compass {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .compass-row {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .compass-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+        }
+
+        .compass-center {
+            font-size: 0.85rem;
+        }
+
+        .compass-btn.active-direction {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.6);
+            color: var(--theme-green);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+            transform: scale(1.15);
+        }
+
+        .compass-btn.active-away {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: rgba(249, 115, 22, 0.6);
+            color: var(--theme-orange);
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.3);
+            transform: scale(1.15);
+        }
+
+        footer {
+            width: 100%;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+            margin-top: auto;
+            background: rgba(8, 11, 22, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-icon">E</div>
+            <h1>Student Engagement AI</h1>
+        </div>
+        <div class="system-status">
+            <div class="badge" id="camera-status-badge">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="camera-status-text">Camera Processing</span>
+            </div>
+            <button class="btn btn-danger" id="toggle-camera-btn" onclick="toggleCamera()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                    <path d="M23 7l-7 5 7 5V7z" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                <span>Stop Engine</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="container">
+
+        <!-- Metrics Top Bar -->
+        <div class="metrics-grid">
+
+            <!-- Engagement Score SVG Gauge -->
+            <div class="card">
+                <div class="card-gauge-wrapper">
+                    <div>
+                        <div class="metric-header">Engagement Score</div>
+                        <div class="metric-value" style="font-size: 1.8rem;" id="score-text">0.0%</div>
+                        <div class="metric-sub" id="score-subtext">Calculating score...</div>
+                    </div>
+                    <div class="gauge-container">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" cx="40" cy="40" r="36" />
+                            <circle class="gauge-fill" id="gauge-circle" cx="40" cy="40" r="36" />
+                        </svg>
+                        <div class="gauge-text" id="gauge-score-value">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active State classification with custom glowing shadow -->
+            <div class="card card-state-glow" id="state-card">
+                <div class="metric-header">Active State</div>
+                <div class="metric-value" style="font-size: 1.7rem; font-weight: 700; line-height: 1.4;"
+                    id="state-text">Initializing...</div>
+                <div class="metric-sub">Dynamic engagement engine status</div>
+            </div>
+
+            <!-- Emotion analysis widget -->
+            <div class="card">
+                <div class="metric-header">Dominant Emotion</div>
+                <div class="metric-value" style="font-size: 1.8rem;" id="emotion-text">Unknown</div>
+                <div class="metric-sub" id="emotion-conf-text">Confidence: 0%</div>
+            </div>
+
+            <!-- Focus and anomaly alerts widget -->
+            <div class="card">
+                <div class="metric-header">Behavior Indicators</div>
+                <div class="metric-value" style="font-size: 1.5rem; font-weight: 600;" id="behavior-summary">All Good
+                </div>
+                <div class="alert-panel">
+                    <span class="alert-pill" id="pill-drowsy">Drowsy</span>
+                    <span class="alert-pill" id="pill-yawn">Yawning</span>
+                    <span class="alert-pill" id="pill-phone">Phone</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Dashboard Layout Split -->
+        <div class="dashboard-body">
+
+            <!-- Left Side Panel: Video Stream -->
+            <div class="card video-card">
+                <div class="video-header">
+                    <div class="video-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                            <path d="M23 7l-7 5 7 5V7z" />
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                        </svg>
+                        Live Analytics Camera Feed
+                    </div>
+                    <div class="badge"
+                        style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--theme-green); font-size: 0.75rem;">
+                        REAL-TIME DETECTOR
+                    </div>
+                </div>
+                <div class="video-container" id="video-container">
+                    <img src="/video_feed" alt="Video Stream" class="video-stream" id="video-feed-img">
+                    <div class="stream-overlay" id="stream-overlay">
+                        <div
+                            style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 1s infinite;">
+                        </div>
+                        LIVE METRICS FEED
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side Panel: Telemetry Graphs & Metric Indicators -->
+            <div class="details-panel">
+
+                <!-- Linear Progress Bar indicators -->
+                <div class="card">
+                    <div class="metric-header" style="margin-bottom: 20px;">Telemetry Metrics</div>
+                    <div class="sub-metrics-list">
+
+                        <!-- EAR metric slider -->
+                        <div class="sub-metric-item">
+                            <div class="sub-metric-info">
+                                <span class="sub-metric-name">👁 EAR (Eye Aspect Ratio)</span>
+                                <span class="sub-metric-val" id="ear-val">0.000</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="ear-progress"></div>
+                            </div>
+                            <div style="font-size: 0.72rem; margin-top: 3px;" id="ear-status" class="metric-sub">
+                                Calculating...</div>
+                        </div>
+
+                        <!-- MAR metric slider -->
+                        <div class="sub-metric-item">
+                            <div class="sub-metric-info">
+                                <span class="sub-metric-name">👄 MAR (Mouth Aspect Ratio)</span>
+                                <span class="sub-metric-val" id="mar-val">0.000</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="mar-progress"></div>
+                            </div>
+                            <div style="font-size: 0.72rem; margin-top: 3px;" id="mar-status" class="metric-sub">
+                                Calculating...</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Head Position Card -->
+                <div class="card" id="head-pose-card">
+                    <div class="metric-header" style="margin-bottom: 16px;">🧭 Head Position</div>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <!-- Compass Grid -->
+                        <div class="head-compass">
+                            <div class="compass-btn" id="compass-up">↑</div>
+                            <div class="compass-row">
+                                <div class="compass-btn" id="compass-left">←</div>
+                                <div class="compass-btn compass-center" id="compass-forward">●</div>
+                                <div class="compass-btn" id="compass-right">→</div>
+                            </div>
+                            <div class="compass-btn" id="compass-down">↓</div>
+                        </div>
+                        <!-- Direction Text -->
+                        <div style="flex: 1;">
+                            <div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;"
+                                id="head-dir-val">Unknown</div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px;">Current head
+                                orientation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Time-Series Chart -->
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Engagement Tracking</div>
+                        <div class="badge" style="font-size: 0.7rem;">Time-Series</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="engagementChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Student Engagement Detection System &copy; 2026. Made with advanced computer vision algorithms & deep learning
+        models.
+    </footer>
+
+    <!-- Interactive Dashboard Script -->
+    <script>
+        let eventSource = null;
+        let chart = null;
+        let isEngineRunning = true;
+        const maxDataPoints = 30;
+
+        // Initialize real-time tracking line chart
+        function initChart() {
+            const ctx = document.getElementById('engagementChart').getContext('2d');
+
+            // Create nice emerald glow gradients for Chart line
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Engagement Score (%)',
+                        data: [],
+                        borderColor: '#10b981',
+                        borderWidth: 2.5,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#10b981',
+                        pointHoverBorderColor: '#ffffff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 10, family: 'Inter' }
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            border: { dash: [4, 4] },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: {
+                                stepSize: 20,
+                                color: '#6b7280',
+                                font: { size: 10, family: 'Inter' }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // SVG Circular Progress Gauge updater
+        function updateGauge(score) {
+            const circle = document.getElementById('gauge-circle');
+            const scoreVal = document.getElementById('gauge-score-value');
+
+            // Limit score between 0 and 100
+            const cleanScore = Math.max(0, Math.min(100, score));
+
+            // Math for dash offset (circle radius is 36, circumference is 2 * pi * 36 = 226.19)
+            const circumference = 226.19;
+            const offset = circumference - (cleanScore / 100) * circumference;
+
+            circle.style.strokeDashoffset = offset;
+            scoreVal.textContent = Math.round(cleanScore);
+
+            // Dynamic color coding based on score level
+            let strokeColor = 'var(--theme-green)';
+            if (cleanScore <= 30) {
+                strokeColor = 'var(--theme-red)';
+            } else if (cleanScore <= 50) {
+                strokeColor = 'var(--theme-orange)';
+            } else if (cleanScore <= 75) {
+                strokeColor = 'var(--theme-yellow)';
+            }
+            circle.style.stroke = strokeColor;
+        }
+
+        // Live stats parser updating all DOM components
+        function updateStats(data) {
+            const current = data.current;
+            const history = data.history;
+
+            if (!current) return;
+
+            // 1. Updates Engagement State & Card Glow Class
+            const stateCard = document.getElementById('state-card');
+            const stateText = document.getElementById('state-text');
+            const scoreText = document.getElementById('score-text');
+            const scoreSubtext = document.getElementById('score-subtext');
+
+            stateText.textContent = current.state;
+            scoreText.textContent = `${current.score.toFixed(1)}%`;
+            updateGauge(current.score);
+
+            // Clean previous state classes
+            stateCard.classList.remove('glow-green', 'glow-yellow', 'glow-orange', 'glow-red');
+
+            if (current.score > 75) {
+                stateCard.classList.add('glow-green');
+                scoreSubtext.textContent = 'Excellent classroom attention!';
+                scoreSubtext.style.color = 'var(--theme-green)';
+            } else if (current.score > 50) {
+                stateCard.classList.add('glow-yellow');
+                scoreSubtext.textContent = 'Decent attention. Maintain focus.';
+                scoreSubtext.style.color = 'var(--theme-yellow)';
+            } else if (current.score > 30) {
+                stateCard.classList.add('glow-orange');
+                scoreSubtext.textContent = 'Low engagement detected.';
+                scoreSubtext.style.color = 'var(--theme-orange)';
+            } else {
+                stateCard.classList.add('glow-red');
+                scoreSubtext.textContent = 'Action Required: Student unengaged!';
+                scoreSubtext.style.color = 'var(--theme-red)';
+            }
+
+            // 2. Dominant Emotion Widget
+            const emotionText = document.getElementById('emotion-text');
+            const emotionConfText = document.getElementById('emotion-conf-text');
+
+            const emotionEmojis = {
+                'happy': 'Happy 😊',
+                'neutral': 'Neutral 😐',
+                'surprise': 'Surprise 😮',
+                'sad': 'Sad 😢',
+                'fear': 'Fear 😨',
+                'angry': 'Angry 😠',
+                'disgust': 'Disgust 🤢',
+                'unknown': 'Unknown 🔍'
+            };
+
+            const emoLabel = emotionEmojis[current.emotion.toLowerCase()] || current.emotion;
+            emotionText.textContent = emoLabel;
+            emotionConfText.textContent = `Confidence: ${(current.emo_conf * 100).toFixed(0)}%`;
+
+            // 3. Behavior alerts (Pills)
+            const pillDrowsy = document.getElementById('pill-drowsy');
+            const pillYawn = document.getElementById('pill-yawn');
+            const pillPhone = document.getElementById('pill-phone');
+            const behaviorSummary = document.getElementById('behavior-summary');
+
+            // Active flags
+            let isAnyAnomaly = false;
+
+            if (current.drowsy) { pillDrowsy.classList.add('active'); isAnyAnomaly = true; }
+            else { pillDrowsy.classList.remove('active'); }
+
+            if (current.yawning) { pillYawn.classList.add('active'); isAnyAnomaly = true; }
+            else { pillYawn.classList.remove('active'); }
+
+            if (current.phone_detected) { pillPhone.classList.add('active'); isAnyAnomaly = true; }
+            else { pillPhone.classList.remove('active'); }
+
+            if (current.phone_detected) {
+                behaviorSummary.textContent = "Phone Active 📱";
+                behaviorSummary.style.color = "var(--theme-red)";
+            } else if (current.drowsy) {
+                behaviorSummary.textContent = "Drowsy Warning 😴";
+                behaviorSummary.style.color = "var(--theme-red)";
+            } else if (current.yawning) {
+                behaviorSummary.textContent = "Yawn Alert 🥱";
+                behaviorSummary.style.color = "var(--theme-orange)";
+            } else if (!current.person_present && current.state.includes("No Face")) {
+                behaviorSummary.textContent = "Student Missing 👤";
+                behaviorSummary.style.color = "var(--theme-red)";
+            } else {
+                behaviorSummary.textContent = "Focused & Active";
+                behaviorSummary.style.color = "var(--theme-green)";
+            }
+
+            // 4. Telemetry bars
+            const earVal = document.getElementById('ear-val');
+            const earProgress = document.getElementById('ear-progress');
+            const earStatus = document.getElementById('ear-status');
+            earVal.textContent = current.ear.toFixed(3);
+            // Map EAR (typically 0.15 - 0.40) to percentage 0 - 100%
+            let earPercentage = Math.max(0, Math.min(100, ((current.ear - 0.15) / 0.25) * 100));
+            earProgress.style.width = `${earPercentage}%`;
+            // Color + status label based on EAR threshold
+            if (current.ear < 0.22) {
+                earProgress.style.background = 'var(--theme-red)';
+                earStatus.textContent = '⚠️ Eyes may be closed';
+                earStatus.style.color = 'var(--theme-red)';
+            } else if (current.ear < 0.25) {
+                earProgress.style.background = 'var(--theme-orange)';
+                earStatus.textContent = 'Eyes partially closed';
+                earStatus.style.color = 'var(--theme-orange)';
+            } else {
+                earProgress.style.background = 'var(--theme-green)';
+                earStatus.textContent = 'Eyes open & alert';
+                earStatus.style.color = 'var(--theme-green)';
+            }
+
+            const marVal = document.getElementById('mar-val');
+            const marProgress = document.getElementById('mar-progress');
+            const marStatus = document.getElementById('mar-status');
+            marVal.textContent = current.mar.toFixed(3);
+            // Map MAR (typically 0.10 - 0.80) to percentage
+            let marPercentage = Math.max(0, Math.min(100, (current.mar / 0.6) * 100));
+            marProgress.style.width = `${marPercentage}%`;
+            if (current.mar > 0.60) {
+                marProgress.style.background = 'var(--theme-red)';
+                marStatus.textContent = '🥱 Yawning detected';
+                marStatus.style.color = 'var(--theme-red)';
+            } else if (current.mar > 0.45) {
+                marProgress.style.background = 'var(--theme-orange)';
+                marStatus.textContent = 'Mouth slightly open';
+                marStatus.style.color = 'var(--theme-orange)';
+            } else {
+                marProgress.style.background = '#3b82f6';
+                marStatus.textContent = 'Mouth closed (normal)';
+                marStatus.style.color = 'var(--text-secondary)';
+            }
+
+            // 5. Compass head position widget
+            const headDirVal = document.getElementById('head-dir-val');
+            headDirVal.textContent = current.head_direction;
+
+            // Reset all compass buttons
+            ['compass-up', 'compass-down', 'compass-left', 'compass-right', 'compass-forward'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('active-direction', 'active-away');
+            });
+
+            // Highlight the active direction
+            const dirMap = {
+                'Forward': 'compass-forward',
+                'Looking Up': 'compass-up',
+                'Looking Down': 'compass-down',
+                'Looking Left': 'compass-left',
+                'Looking Right': 'compass-right'
+            };
+            const activeId = dirMap[current.head_direction];
+            if (activeId) {
+                const activeBtn = document.getElementById(activeId);
+                if (current.head_direction === 'Forward') {
+                    activeBtn.classList.add('active-direction');
+                    headDirVal.style.color = 'var(--theme-green)';
+                } else {
+                    activeBtn.classList.add('active-away');
+                    headDirVal.style.color = 'var(--theme-orange)';
+                }
+            }
+
+            // 5. Update Time-Series Line Chart
+            if (history && history.length > 0) {
+                // Slice history to only show the last 30 points to avoid squished labels
+                const historySlice = history.slice(-maxDataPoints);
+                chart.data.labels = historySlice.map(h => h.time);
+                chart.data.datasets[0].data = historySlice.map(h => h.score);
+
+                // Color mapping for chart borders to match overall engagement trends
+                const recentScores = historySlice.map(h => h.score);
+                const avgScore = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
+                let chartColor = '#10b981'; // green
+                if (avgScore <= 30) chartColor = '#ef4444';
+                else if (avgScore <= 50) chartColor = '#f97316';
+                else if (avgScore <= 75) chartColor = '#f59e0b';
+
+                chart.data.datasets[0].borderColor = chartColor;
+                chart.data.datasets[0].pointHoverBackgroundColor = chartColor;
+
+                chart.update('none'); // Update without animation for continuous smooth panning
+            }
+        }
+
+        // Subscribes to backend server-sent events for statistics streaming
+        function startSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource('/api/stats/stream');
+
+            eventSource.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateStats(data);
+                } catch (e) {
+                    console.error("Error parsing telemetry stream data:", e);
+                }
+            };
+
+            eventSource.onerror = function (err) {
+                console.warn("SSE connection error. Retrying in 2 seconds...", err);
+                eventSource.close();
+                document.getElementById('status-dot').style.background = 'var(--theme-red)';
+                document.getElementById('camera-status-text').textContent = 'Connecting...';
+                setTimeout(startSSE, 2000);
+            };
+
+            document.getElementById('status-dot').style.background = 'var(--theme-green)';
+            document.getElementById('camera-status-text').textContent = 'Engine Active';
+        }
+
+        // Toggle capture state of the camera pipeline
+        async function toggleCamera() {
+            const btn = document.getElementById('toggle-camera-btn');
+            const videoFeedImg = document.getElementById('video-feed-img');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('camera-status-text');
+            const overlay = document.getElementById('stream-overlay');
+
+            const action = isEngineRunning ? 'stop' : 'start';
+
+            try {
+                const response = await fetch('/api/toggle_camera', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    isEngineRunning = result.active;
+                    if (isEngineRunning) {
+                        // Re-enable camera view
+                        videoFeedImg.src = "/video_feed";
+                        videoFeedImg.style.opacity = "1";
+                        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><span>Stop Engine</span>`;
+                        btn.className = "btn btn-danger";
+                        statusDot.style.background = 'var(--theme-green)';
+                        statusDot.style.boxShadow = '0 0 8px var(--theme-green)';
+                        statusText.textContent = 'Engine Active';
+                        overlay.style.display = 'flex';
+                        startSSE();
+                    } else {
+                        // Disable camera view
+                        videoFeedImg.src = "";
+                        videoFeedImg.style.opacity = "0.15";
+                        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Start Engine</span>`;
+                        btn.className = "btn";
+                        statusDot.style.background = '#6b7280';
+                        statusDot.style.boxShadow = 'none';
+                        statusText.textContent = 'Engine Stopped';
+                        overlay.style.display = 'none';
+
+                        if (eventSource) {
+                            eventSource.close();
+                        }
+
+                        // Set idle metrics on the UI
+                        updateStats({
+                            current: {
+                                state: "System Paused 💤",
+                                score: 0.0,
+                                emotion: "N/A",
+                                emo_conf: 0.0,
+                                ear: 0.0,
+                                mar: 0.0,
+                                drowsy: false,
+                                yawning: false,
+                                head_direction: "N/A",
+                                phone_detected: false,
+                                looking_away: false,
+                                person_present: false
+                            },
+                            history: []
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to toggle camera:", err);
+            }
+        }
+
+        // Initialize dashboard elements upon loading window
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            startSSE();
+        });
+    </script>
+</body>
+
+</html>
