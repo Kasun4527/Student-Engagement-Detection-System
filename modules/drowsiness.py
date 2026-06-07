@@ -13,10 +13,10 @@ class DrowsinessDetector:
 
         # Thresholds
         self.EAR_THRESHOLD = 0.25
-        self.MAR_THRESHOLD = 0.60
+        self.MAR_THRESHOLD = 0.50  # lowered from 0.60 — easier to trigger yawn
 
         self.CLOSED_FRAMES = 20
-        self.YAWN_FRAMES = 20
+        self.YAWN_FRAMES = 10      # lowered from 20 — fewer frames needed
 
         # Counters
         self.closed_counter = 0
